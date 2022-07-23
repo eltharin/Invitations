@@ -2,7 +2,7 @@
     "name": "eltharin/invitations",
     "autoload": {
         "psr-4": {
-            "Eltharin\\Invitations\\": "src/"
+            "Eltharin\\InvitationsBundle\\": "src/"
         }
     },    
 	"description": "invitations Bundle for symfony",

@@ -14,5 +14,11 @@ class EltharinInvitationsExtension extends Extension implements PrependExtension
 	public function load(array $configs, ContainerBuilder $container)
 	{
 	}
-
+	
+	public function prepend(ContainerBuilder $container)
+	{
+		$yamlParser = new Parser();
+		$doctrineConfig = $yamlParser->parse(file_get_contents(__DIR__ . '/../Resources/config/doctrine.yaml'));
+		$container->prependExtensionConfig('doctrine', $doctrineConfig['doctrine']);
+	}
 }
