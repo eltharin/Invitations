@@ -2,175 +2,128 @@
 
 namespace Eltharin\InvitationsBundle\Service;
 
+use Eltharin\CommonAssetsBundle\Service\Token;
 use Eltharin\InvitationsBundle\Entity\Invitation;
 use Eltharin\InvitationsBundle\Repository\InvitationRepository;
-use Symfony\Bridge\Twig\Mime\TemplatedEmail;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mailer\Transport\TransportInterface;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Core\Security;
+use Symfony\Component\Translation\Exception\NotFoundResourceException;
+use Eltharin\InvitationsBundle\Exception\AlreadyExistsException;
+use Eltharin\InvitationsBundle\Exception\CantCreateInvitationException;
+use Eltharin\InvitationsBundle\Service\InvitationEntityManager;
 
 class InvitationManager
 {
+	private $invitationLocator;
 	private $invitationRepository;
-	private $mailer;
-	private $transport;
+	private $invitationEntityManager;
 
-	public function __construct(InvitationRepository $invitationRepository, MailerInterface $mailer, TransportInterface $transport)
+
+	public function __construct(InvitationLocator $invitationLocator,
+								InvitationRepository $invitationRepository,
+								InvitationEntityManager $invitationEntityManager
+	)
 	{
+		$this->invitationLocator = $invitationLocator;
 		$this->invitationRepository = $invitationRepository;
-		$this->mailer = $mailer;
-		$this->transport = $transport;
-	}
-
-	public function create($class, $userFrom, $email, $data)
-	{
-		dump('create invitaiton');
-		$invit = new Invitation();
-		$invit->setType($class);
-		$invit->setUser($userFrom);
-		$invit->setEmail($email);
-		$invit->setItemId(1);
-		$invit->setData($data);
-
-		$invit->setCreatedAt(new \DateTimeImmutable());
-		$invit->setToken('123456-45987-549654-654654');
-
-		$this->invitationRepository->add($invit, true);
-		//$this->sendMail($invit);
-	}
-
-	protected function sendMail(Invitation $invitation)
-	{
-		$class = new ($invitation->getType());
-		dump($class);
-
-		$mail = new TemplatedEmail();
-		$mail->from($this->transport->getUsername())
-			->to($invitation->getEmail());
-
-		$class->setMailContent($mail, $invitation);
-
-		$this->mailer->send($mail);
-	}
-
-	public function reSendMail($invitationId)
-	{
+		$this->invitationEntityManager = $invitationEntityManager;
 
 	}
 
-	public function delete($invitationId)
+	public function findBy($criteres)
 	{
+		$data = $this->invitationRepository->findBy($criteres);
 
+		if(isset($criteres['type']))
+		{
+			$ret = [];
+			foreach($criteres['type'] as $type)
+			{
+				$ret[$type] = [];
+			}
+
+			foreach($data as $row)
+			{
+				$ret[$row->getType()][] = $this->invitationEntityManager->setInvitation($row);
+			}
+			$data = $ret;
+		}
+
+		return $data;
 	}
 
-	public function resolve($invitationId)
+	public function getInvit($invitationId, array $params) : ?InvitationEntityManager
 	{
+		$criteres = ['id' => $invitationId];
 
-	}
+		if(isset($params['token']))
+		{
+			$criteres['token'] = $params['token'];
+		}
+
+		if(isset($params['class']))
+		{
+			$criteres['type'] = $params['class'];
+		}
+
+		if(isset($params['owner']))
+		{
+			$criteres['user'] = $params['owner'];
+		}
 
 
-	/*
-	private static function getOrDie($invitId)
-	{
-		$invit = (new \Specs\Tables\Invitation())->findWithRel()
-			->where(['Invitation.INV_INVITATION' => $invitId])
-			->first();
-
+		$invit = $this->invitationRepository->findOneBy($criteres);
 		if($invit == null)
 		{
-			throw new HTTPException('Invitation inconnue',403);
+			return null;
 		}
 
-		return $invit;
+		return $this->invitationEntityManager->setInvitation($invit);
 	}
 
-	public static function getInvitation($email, $token)
+	public function create($classType, $userFrom, $email, $itemId, $data = [])
 	{
-		$invit = (new \Specs\Tables\Invitation())
-			->findWithRel()
-			->where(['Invitation.INV_EMAIL' => $email])
-			->where(['Invitation.INV_TOKEN' => $token])
-			->first();
+		$classInvit = $this->invitationLocator->get($classType);
 
-		return $invit;
-	}
+		$invitation = new Invitation();
+		$invitation->setType($classType);
+		$invitation->setUser($userFrom);
+		$invitation->setEmail($email);
+		$invitation->setItemId($itemId);
+		$invitation->setData($data);
 
-	public static function getAllInvitationFromEquipe($equipe, $type )
-	{
-		$invit = (new \Specs\Tables\Invitation())
-			->findWithRel()
-			->ijoin('collaborateur', 'COL_COLLABORATEUR = INV_ITEM_ID')
-			->where(['Invitation.INV_TYPE' => $type])
-			->where(['COL_EQUIPE' => $equipe])
-			->select('COL_COLLABORATEUR', false,true)
-			->fetchMode(\PDO::FETCH_GROUP | \PDO::FETCH_UNIQUE | \PDO::FETCH_OBJ)->all();
-
-
-		return $invit;
-	}
-
-	public static function getAllInvitationFromType($itemId, $type )
-	{
-		$invit = (new \Specs\Tables\Invitation())
-			->findWithRel()
-			->where(['Invitation.INV_TYPE' => $type])
-			->where(['Invitation.INV_ITEM_ID' => $itemId]);
-
-		return $invit;
-	}
-
-	public static function getClassInvitType($type) : ?AbstractInvitationType
-	{
-		switch($type)
+		if($classInvit->mustBeUnique())
 		{
-			case 'JOINEQUIPE'      : return new JoinEquipe();break;
-			case 'ACTIVEUSER'      : return new ActiveUser();break;
-			case 'RESETPASSWORD'   : return new ResetPassword();break;
-			case 'SETMANAGER'      : return new SetManager();break;
-			case 'SETGESTIONNAIRE' : return new SetGestionnaire();break;
-			//case '' : return ;break;
-			default : 	trigger_error ('Type Invitation ' . $type . ' non géré', E_USER_ERROR);
-				throw new HttpException('Type non géré.', 500);
-				return null;
-				break;
+			if(!empty($this->invitationRepository->findBy([
+					'type' => $classType,
+					'email' => $email,
+					'itemId' => $itemId
+				]))
+				|| $classInvit->isDoublon($invitation))
+			{
+				throw new AlreadyExistsException('Invitation déjà envoyée');
+				return false;
+			}
 		}
-	}
 
-	public static function creer(string $type, array $data)
-	{
-		$invit = self::getClassInvitType($type)->creer($data);
-		if($invit != null)
+		$invitation->setCreatedAt(new \DateTimeImmutable());
+		$invitation->setToken(Token::generate());
+
+		if(!$classInvit->canCreate($invitation))
 		{
-			self::sendMail(Invitation::getOrDie($invit->id));
+			unset($invitation);
+			throw new CantCreateInvitationException('Invitation déjà envoyée');
+			return false;
 		}
+
+		$this->invitationRepository->add($invitation, true);
+
+		$invit = $this->invitationEntityManager->setInvitation($invitation);
+		$invit->sendMail();
+
+		return $invit;
 	}
-
-	public static function sendMail($invit)
-	{
-		$mail = new Mailer();
-		$mail->addAddress ($invit->email);
-
-		$link = $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['SERVER_NAME'] . '/invitation/accept/' . base64_encode($invit->email) . '/' . $invit->token;
-		self::getClassInvitType($invit->type)->setMailInfos($mail, $link, $invit);
-		$mail->send();
-	}
-
-	public static function acceptInvit($invit) : Response
-	{
-		return self::getClassInvitType($invit->type)->accept($invit);
-	}
-
-	public static function deleteInvit(Entity $invit)
-	{
-		(new \Specs\Tables\Invitation())->DBDelete($invit);
-	}
-
-	public static function findFor(string $string, $idEquipe)
-	{
-	}
-
-	public static function canDelete($invit)
-	{
-		return self::getClassInvitType($invit->type)->canDelete($invit);
-	}*/
 }

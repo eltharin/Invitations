@@ -5,6 +5,9 @@ namespace Eltharin\InvitationsBundle\Repository;
 use Eltharin\InvitationsBundle\Entity\Invitation;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use Eltharin\InvitationsBundle\Exception\AlreadyExistsException;
+use Eltharin\InvitationsBundle\Exception\CantCreateInvitationException;
+use Eltharin\InvitationsBundle\Service\InvitationEntityManager;
 
 /**
  * @extends ServiceEntityRepository<Invitation>
@@ -19,7 +22,7 @@ class InvitationRepository extends ServiceEntityRepository
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, Invitation::class);
-    }
+   }
 
     public function add(Invitation $entity, bool $flush = false): void
     {
@@ -38,29 +41,4 @@ class InvitationRepository extends ServiceEntityRepository
             $this->getEntityManager()->flush();
         }
     }
-
-//    /**
-//     * @return Invitation[] Returns an array of Invitation objects
-//     */
-//    public function findByExampleField($value): array
-//    {
-//        return $this->createQueryBuilder('i')
-//            ->andWhere('i.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->orderBy('i.id', 'ASC')
-//            ->setMaxResults(10)
-//            ->getQuery()
-//            ->getResult()
-//        ;
-//    }
-
-//    public function findOneBySomeField($value): ?Invitation
-//    {
-//        return $this->createQueryBuilder('i')
-//            ->andWhere('i.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->getQuery()
-//            ->getOneOrNullResult()
-//        ;
-//    }
 }

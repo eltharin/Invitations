@@ -23,8 +23,7 @@ class Invitation
     #[ORM\Column]
     private ?\DateTimeImmutable $createdAt = null;
 
-    #[ORM\ManyToOne]
-    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\ManyToOne(fetch:'EAGER')]
     private ?User $user = null;
 
 	#[ORM\Column(length: 255)]
