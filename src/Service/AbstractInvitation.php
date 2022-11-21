@@ -14,6 +14,8 @@ abstract class AbstractInvitation
 {
 	abstract public function setMailContent(TemplatedEmail $email, InvitationEntityManager $invitation) : void;
 
+	abstract public function getResolvePath(InvitationEntityManager $invitation) : array;
+
 	abstract public function resolve(InvitationEntityManager $invitation) : bool;
 
 	public function checkData(Invitation $invitation) : bool

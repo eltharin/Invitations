@@ -23,6 +23,7 @@ class Invitation
     #[ORM\Column]
     private ?\DateTimeImmutable $createdAt = null;
 
+	//--TODO:param User Class 
     #[ORM\ManyToOne(fetch:'EAGER')]
     private ?User $user = null;
 
@@ -33,7 +34,10 @@ class Invitation
 	private ?int $itemId = null;
 
 	#[ORM\Column]
-    private array $data = [];
+	private array $data = [];
+
+	#[ORM\Column(nullable: true)]
+	private ?\DateTime $lastSendAt = null;
 
     public function getId(): ?int
     {
@@ -120,6 +124,18 @@ class Invitation
 	public function setItemId(int $itemId): self
 	{
 		$this->itemId = $itemId;
+
+		return $this;
+	}
+
+	public function getLastSendAt(): ?\DateTime
+	{
+		return $this->lastSendAt;
+	}
+
+	public function setLastSendAt(?\DateTime $lastSendAt): self
+	{
+		$this->lastSendAt = $lastSendAt;
 
 		return $this;
 	}

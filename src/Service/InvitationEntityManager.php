@@ -3,35 +3,29 @@
 namespace Eltharin\InvitationsBundle\Service;
 
 use Eltharin\InvitationsBundle\Entity\Invitation;
+use Eltharin\InvitationsBundle\Exception\TooEarlyException;
 use Eltharin\InvitationsBundle\Repository\InvitationRepository;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mailer\Transport\TransportInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
+use Symfony\Component\DependencyInjection\ParameterBag\ContainerBagInterface;
+use Symfony\Component\Validator\Constraints\DateTime;
 
 
 class InvitationEntityManager
 {
 	private $invitation;
-	private $urlGenerator;
-	private $invitationLocator;
-	private $invitationRepository;
-	private $mailer;
-	private $transport;
 
 	public function __construct(
-		UrlGeneratorInterface $urlGenerator,
-		InvitationLocator $invitationLocator,
-		InvitationRepository $invitationRepository,
-		MailerInterface $mailer,
-		TransportInterface $transport
+		private UrlGeneratorInterface $urlGenerator,
+		private InvitationLocator $invitationLocator,
+		private InvitationRepository $invitationRepository,
+		private MailerInterface $mailer,
+		private TransportInterface $transport,
+		private ContainerBagInterface $params
 	)
 	{
-		$this->urlGenerator = $urlGenerator;
-		$this->invitationLocator = $invitationLocator;
-		$this->invitationRepository = $invitationRepository;
-		$this->mailer = $mailer;
-		$this->transport = $transport;
 	}
 
 	public function setInvitation(Invitation $invitation)
@@ -62,14 +56,29 @@ class InvitationEntityManager
 
 	public function sendMail()
 	{
+		if($this->invitation->getLastSendAt() != null)
+		{
+			$dateCanSend = $this->invitation->getLastSendAt()->add(new \DateInterval('PT' . (int)$this->params->get('app.delayBeetween2Mails') . 'S'));
+			if($dateCanSend > new \DateTime())
+			{
+				throw new TooEarlyException('Vous devez attendre ' . ($dateCanSend->getTimeStamp() - (new \DateTime)->getTimestamp() + 1) . ' secondes pour renvoyer ce mail.');
+			}
+		}
+
 		$classInvit = $this->invitationLocator->get($this->invitation->getType());
 
 		$mail = new TemplatedEmail();
 		$mail->from($this->transport->getUsername())
 			->to($this->invitation->getEmail());
-
 		$classInvit->setMailContent($mail, $this);
+		$mail->context(array_merge([
+			'invitation_url' => $this->getResolvePath(true),
+		], $mail->getContext()));
+
 		$this->mailer->send($mail);
+
+		$this->invitation->setLastSendAt(new \DateTime());
+		$this->invitationRepository->flush();
 	}
 
 	public function resolve($deleteAfterSuccess = true) :bool
@@ -86,6 +95,11 @@ class InvitationEntityManager
 		}
 
 		return false;
+	}
+
+	public function getClassInvit()
+	{
+		return $this->invitationLocator->get($this->invitation->getType());
 	}
 
 	public function delete()

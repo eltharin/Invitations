@@ -24,14 +24,19 @@ class InvitationRepository extends ServiceEntityRepository
         parent::__construct($registry, Invitation::class);
    }
 
-    public function add(Invitation $entity, bool $flush = false): void
-    {
-        $this->getEntityManager()->persist($entity);
+	public function add(Invitation $entity, bool $flush = false): void
+	{
+		$this->getEntityManager()->persist($entity);
 
-        if ($flush) {
-            $this->getEntityManager()->flush();
-        }
-    }
+		if ($flush) {
+			$this->getEntityManager()->flush();
+		}
+	}
+
+	public function flush(): void
+	{
+		$this->getEntityManager()->flush();
+	}
 
     public function remove(Invitation $entity, bool $flush = false): void
     {

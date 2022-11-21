@@ -5,6 +5,7 @@ namespace Eltharin\InvitationsBundle\Service;
 use Eltharin\CommonAssetsBundle\Service\Token;
 use Eltharin\InvitationsBundle\Entity\Invitation;
 use Eltharin\InvitationsBundle\Repository\InvitationRepository;
+use phpDocumentor\Reflection\DocBlock\Tags\Deprecated;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mailer\Transport\TransportInterface;
@@ -33,11 +34,11 @@ class InvitationManager
 
 	}
 
-	public function findBy($criteres)
+	public function findBy($criteres, $filterByType=true)
 	{
 		$data = $this->invitationRepository->findBy($criteres);
 
-		if(isset($criteres['type']))
+		if(isset($criteres['type']) && $filterByType == true)
 		{
 			$ret = [];
 			foreach($criteres['type'] as $type)
@@ -51,11 +52,15 @@ class InvitationManager
 			}
 			$data = $ret;
 		}
+		else
+		{
+			$data = array_map(function ($invit) {return $this->invitationEntityManager->setInvitation($invit);}, $data);
+		}
 
 		return $data;
 	}
 
-	public function getInvit($invitationId, array $params) : ?InvitationEntityManager
+	public function getInvit($invitationId, array $params = []) : ?InvitationEntityManager
 	{
 		$criteres = ['id' => $invitationId];
 
@@ -66,7 +71,13 @@ class InvitationManager
 
 		if(isset($params['class']))
 		{
+			@trigger_error('use type instead', \E_USER_DEPRECATED);
 			$criteres['type'] = $params['class'];
+		}
+
+		if(isset($params['type']))
+		{
+			$criteres['type'] = $params['type'];
 		}
 
 		if(isset($params['owner']))

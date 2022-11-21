@@ -28,6 +28,9 @@ class EltharinInvitationsBundle extends AbstractBundle
 		$doctrineConfig = $yamlParser->parse(file_get_contents(__DIR__ . '/../config/packages/doctrine.yaml'));
 		$builder->prependExtensionConfig('doctrine', $doctrineConfig['doctrine']);
 
+		$container->parameters()->set('app.delayBeetween2Mails', '%env(DELAY_BEETWEEN_2_INVITATION_MAILS)%');
+		$container->parameters()->set('env(DELAY_BEETWEEN_2_INVITATION_MAILS)', '300');
+
 		//$container->import(__DIR__.'/../config/services.yaml');
 
 		$container->services()
@@ -44,6 +47,7 @@ class EltharinInvitationsBundle extends AbstractBundle
 				service(InvitationRepository::class),
 				service('Symfony\Component\Mailer\MailerInterface'),
 				service('Symfony\Component\Mailer\Transport\TransportInterface'),
+				service('Symfony\Component\DependencyInjection\ParameterBag\ContainerBagInterface'),
 			])
 		;
 
