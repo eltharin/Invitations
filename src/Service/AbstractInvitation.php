@@ -5,7 +5,7 @@ namespace Eltharin\InvitationsBundle\Service;
 use Eltharin\InvitationsBundle\Entity\Invitation;
 use Eltharin\InvitationsBundle\Exception\AlreadyExistsException;
 use Eltharin\InvitationsBundle\Repository\InvitationRepository;
-use Symfony\Bridge\Twig\Mime\TemplatedEmail;
+use Eltharin\CommonAssetsBundle\Service\TemplatedEmail;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mailer\Transport\TransportInterface;
 use Symfony\Component\Translation\Exception\NotFoundResourceException;
@@ -44,6 +44,11 @@ abstract class AbstractInvitation
 	}
 
 	public function isDoublon(Invitation $invitation) : bool
+	{
+		return false;
+	}
+
+	public function resendMailIfAlreadyExists() : bool
 	{
 		return false;
 	}

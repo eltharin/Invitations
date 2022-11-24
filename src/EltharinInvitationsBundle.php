@@ -6,6 +6,7 @@ use Eltharin\InvitationsBundle\Repository\InvitationRepository;
 use Eltharin\InvitationsBundle\Service\InvitationEntityManager;
 use Eltharin\InvitationsBundle\Service\InvitationLocator;
 use Eltharin\InvitationsBundle\Service\InvitationManager;
+use Eltharin\CommonAssetsBundle\Service\SendMailService;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
@@ -48,6 +49,7 @@ class EltharinInvitationsBundle extends AbstractBundle
 				service('Symfony\Component\Mailer\MailerInterface'),
 				service('Symfony\Component\Mailer\Transport\TransportInterface'),
 				service('Symfony\Component\DependencyInjection\ParameterBag\ContainerBagInterface'),
+				service(SendMailService::class),
 			])
 		;
 

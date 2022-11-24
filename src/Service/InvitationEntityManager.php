@@ -2,13 +2,13 @@
 
 namespace Eltharin\InvitationsBundle\Service;
 
+use Eltharin\CommonAssetsBundle\Service\SendMailService;
 use Eltharin\InvitationsBundle\Entity\Invitation;
 use Eltharin\InvitationsBundle\Exception\TooEarlyException;
 use Eltharin\InvitationsBundle\Repository\InvitationRepository;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mailer\Transport\TransportInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
-use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\DependencyInjection\ParameterBag\ContainerBagInterface;
 use Symfony\Component\Validator\Constraints\DateTime;
 
@@ -23,7 +23,8 @@ class InvitationEntityManager
 		private InvitationRepository $invitationRepository,
 		private MailerInterface $mailer,
 		private TransportInterface $transport,
-		private ContainerBagInterface $params
+		private ContainerBagInterface $params,
+		private SendMailService $sendMail
 	)
 	{
 	}
@@ -67,15 +68,17 @@ class InvitationEntityManager
 
 		$classInvit = $this->invitationLocator->get($this->invitation->getType());
 
-		$mail = new TemplatedEmail();
-		$mail->from($this->transport->getUsername())
-			->to($this->invitation->getEmail());
-		$classInvit->setMailContent($mail, $this);
-		$mail->context(array_merge([
-			'invitation_url' => $this->getResolvePath(true),
-		], $mail->getContext()));
+		$mail = $this->sendMail->createMail()
+					->addTo($this->invitation->getEmail())
+					->addContext('invitation_url', $this->getResolvePath(true))
+					->addContext('invitation', $this->getInvitation())
+			;
 
-		$this->mailer->send($mail);
+
+		$classInvit->setMailContent($mail, $this);
+
+
+		$mail->send();
 
 		$this->invitation->setLastSendAt(new \DateTime());
 		$this->invitationRepository->flush();

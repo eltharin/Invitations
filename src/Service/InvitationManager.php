@@ -108,15 +108,23 @@ class InvitationManager
 
 		if($classInvit->mustBeUnique())
 		{
-			if(!empty($this->invitationRepository->findBy([
+			if(!empty($oldInvit = $this->invitationRepository->findBy([
 					'type' => $classType,
 					'email' => $email,
 					'itemId' => $itemId
 				]))
 				|| $classInvit->isDoublon($invitation))
 			{
-				throw new AlreadyExistsException('Invitation déjà envoyée');
-				return false;
+				if($classInvit->resendMailIfAlreadyExists())
+				{
+					$invit = $this->invitationEntityManager->setInvitation($oldInvit[0])->sendMail();
+					return $invit;
+				}
+				else
+				{
+					throw new AlreadyExistsException('Invitation déjà envoyée');
+					return false;
+				}
 			}
 		}
 
@@ -126,7 +134,7 @@ class InvitationManager
 		if(!$classInvit->canCreate($invitation))
 		{
 			unset($invitation);
-			throw new CantCreateInvitationException('Invitation déjà envoyée');
+			throw new CantCreateInvitationException('Impossible de créér l\'Invitation');
 			return false;
 		}
 
