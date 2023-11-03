@@ -1,7 +1,0 @@
-doctrine:
-    orm:
-        mappings:
-            EltharinInvitations:
-                is_bundle: true
-                prefix: 'Eltharin\InvitationsBundle\Entity'
-                alias: EltharinInvitations

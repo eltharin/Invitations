@@ -7,33 +7,27 @@ use Eltharin\InvitationsBundle\Service\InvitationEntityManager;
 use Eltharin\InvitationsBundle\Service\InvitationLocator;
 use Eltharin\InvitationsBundle\Service\InvitationManager;
 use Eltharin\CommonAssetsBundle\Service\SendMailService;
-use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
-use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
 use Symfony\Component\HttpKernel\Bundle\AbstractBundle;
-use Symfony\Component\HttpKernel\Bundle\Bundle;
-use Symfony\Component\Routing\Loader\Configurator\RouteConfigurator;
-use Symfony\Component\Yaml\Parser;
 
 use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
-use function Symfony\Component\DependencyInjection\Loader\Configurator\service_locator;
 use function Symfony\Component\DependencyInjection\Loader\Configurator\tagged_locator;
 
 
 class EltharinInvitationsBundle extends AbstractBundle
 {
+	public function prependExtension(ContainerConfigurator $container, ContainerBuilder $builder): void
+	{
+		$container->extension('doctrine',[    'orm' => ['mappings' => ['EltharinInvitationsBundle' => [
+			'is_bundle' => true,
+			'prefix' => 'Eltharin\\InvitationsBundle\\Entity',
+			'alias' => 'EltharinInvitations',
+		]]]]);
+	}
+	
 	public function loadExtension(array $config, ContainerConfigurator $container, ContainerBuilder $builder): void
 	{
-		$yamlParser = new Parser();
-		$doctrineConfig = $yamlParser->parse(file_get_contents(__DIR__ . '/../config/packages/doctrine.yaml'));
-		$builder->prependExtensionConfig('doctrine', $doctrineConfig['doctrine']);
-
-		$container->parameters()->set('app.delayBeetween2Mails', '%env(DELAY_BEETWEEN_2_INVITATION_MAILS)%');
-		$container->parameters()->set('env(DELAY_BEETWEEN_2_INVITATION_MAILS)', '300');
-
-		//$container->import(__DIR__.'/../config/services.yaml');
-
 		$container->services()
 			->set(InvitationRepository::class)
 			->args([service('doctrine')])
