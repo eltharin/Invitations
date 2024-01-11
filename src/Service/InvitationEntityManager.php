@@ -59,8 +59,8 @@ class InvitationEntityManager
 	{
 		if($this->invitation->getLastSendAt() != null)
 		{
-			$dateCanSend = $this->invitation->getLastSendAt()->add(new \DateInterval('PT' . (int)$this->params->get('app.delayBeetween2Mails') . 'S'));
-			if($dateCanSend > new \DateTime())
+			$dateCanSend = $this->invitation->getLastSendAt()->add(new \DateInterval('PT' . ((int)$this->params->has('app.delayBeetween2Mails') ? $this->params->get('app.delayBeetween2Mails') : 10) . 'S'));
+			if($dateCanSend >= new \DateTime())
 			{
 				throw new TooEarlyException('Vous devez attendre ' . ($dateCanSend->getTimeStamp() - (new \DateTime)->getTimestamp() + 1) . ' secondes pour renvoyer ce mail.');
 			}
