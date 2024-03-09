@@ -2,11 +2,13 @@
 
 namespace Eltharin\InvitationsBundle;
 
+use Eltharin\InvitationsBundle\Entity\InvitationUserInterface;
 use Eltharin\InvitationsBundle\Repository\InvitationRepository;
 use Eltharin\InvitationsBundle\Service\InvitationEntityManager;
 use Eltharin\InvitationsBundle\Service\InvitationLocator;
 use Eltharin\InvitationsBundle\Service\InvitationManager;
 use Eltharin\CommonAssetsBundle\Service\SendMailService;
+use Symfony\Component\Config\Definition\Configurator\DefinitionConfigurator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use Symfony\Component\HttpKernel\Bundle\AbstractBundle;
@@ -19,11 +21,25 @@ class EltharinInvitationsBundle extends AbstractBundle
 {
 	public function prependExtension(ContainerConfigurator $container, ContainerBuilder $builder): void
 	{
-		$container->extension('doctrine',[    'orm' => ['mappings' => ['EltharinInvitationsBundle' => [
-			'is_bundle' => true,
-			'prefix' => 'Eltharin\\InvitationsBundle\\Entity',
-			'alias' => 'EltharinInvitations',
-		]]]]);
+		$builder->prependExtensionConfig('doctrine',[
+			'orm' => [
+				'resolve_target_entities' => [
+					'Eltharin\\InvitationsBundle\\Entity\\InvitationUserInterface' => 'App\\Entity\\User'
+				]
+			]
+		]);
+
+		$container->extension('doctrine',[
+			'orm' => [
+				'mappings' => [
+					'EltharinInvitationsBundle' => [
+					'is_bundle' => true,
+					'prefix' => 'Eltharin\\InvitationsBundle\\Entity',
+					'alias' => 'EltharinInvitations',
+					]
+				],
+			]
+		]);
 	}
 	
 	public function loadExtension(array $config, ContainerConfigurator $container, ContainerBuilder $builder): void
@@ -60,6 +76,13 @@ class EltharinInvitationsBundle extends AbstractBundle
 				service(InvitationLocator::class),
 				service(InvitationRepository::class),
 				service(InvitationEntityManager::class),
+			])
+		;
+
+		$container->services()
+			->set(InvitationUserInterface::class)
+			->args([
+				tagged_locator('app.invitation', 'key'),
 			])
 		;
 	}

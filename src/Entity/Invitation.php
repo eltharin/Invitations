@@ -2,9 +2,9 @@
 
 namespace Eltharin\InvitationsBundle\Entity;
 
+use Eltharin\InvitationsBundle\Entity\InvitationUserInterface;
 use Eltharin\InvitationsBundle\Repository\InvitationRepository;
 use Doctrine\ORM\Mapping as ORM;
-use App\Entity\User;
 
 #[ORM\Entity(repositoryClass: InvitationRepository::class)]
 class Invitation
@@ -25,7 +25,7 @@ class Invitation
 
 	//--TODO:param User Class 
     #[ORM\ManyToOne(fetch:'EAGER')]
-    private ?User $user = null;
+    private ?InvitationUserInterface $user = null;
 
 	#[ORM\Column(length: 255)]
 	private ?string $email = null;
@@ -80,12 +80,12 @@ class Invitation
         return $this;
     }
 
-    public function getUser() : ?User
+    public function getUser() : ?InvitationUserInterface
     {
         return $this->user;
     }
 
-    public function setUser(?User $user): self
+    public function setUser(?InvitationUserInterface $user): self
     {
         $this->user = $user;
 
