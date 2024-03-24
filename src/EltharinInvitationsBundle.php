@@ -81,9 +81,6 @@ class EltharinInvitationsBundle extends AbstractBundle
 
 		$container->services()
 			->set(InvitationUserInterface::class)
-			->args([
-				tagged_locator('app.invitation', 'key'),
-			])
 		;
 	}
 }
