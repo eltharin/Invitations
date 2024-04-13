@@ -11,6 +11,7 @@ use Symfony\Component\Mailer\Transport\TransportInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\DependencyInjection\ParameterBag\ContainerBagInterface;
 use Symfony\Component\Validator\Constraints\DateTime;
+use Symfony\Component\DependencyInjection\ServiceLocator;
 
 
 class InvitationEntityManager
@@ -19,7 +20,7 @@ class InvitationEntityManager
 
 	public function __construct(
 		private UrlGeneratorInterface $urlGenerator,
-		private InvitationLocator $invitationLocator,
+		private ServiceLocator $invitationLocator,
 		private InvitationRepository $invitationRepository,
 		private MailerInterface $mailer,
 		private TransportInterface $transport,
