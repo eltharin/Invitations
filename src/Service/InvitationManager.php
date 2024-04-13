@@ -15,6 +15,7 @@ use Symfony\Component\Translation\Exception\NotFoundResourceException;
 use Eltharin\InvitationsBundle\Exception\AlreadyExistsException;
 use Eltharin\InvitationsBundle\Exception\CantCreateInvitationException;
 use Eltharin\InvitationsBundle\Service\InvitationEntityManager;
+use Symfony\Component\DependencyInjection\ServiceLocator;
 
 class InvitationManager
 {
@@ -23,7 +24,7 @@ class InvitationManager
 	private $invitationEntityManager;
 
 
-	public function __construct(InvitationLocator $invitationLocator,
+	public function __construct(ServiceLocator $invitationLocator,
 								InvitationRepository $invitationRepository,
 								InvitationEntityManager $invitationEntityManager
 	)
@@ -36,6 +37,11 @@ class InvitationManager
 
 	public function findBy($criteres, $filterByType=true)
 	{
+        if(isset($criteres['type']) && !is_array($criteres['type']))
+        {
+            $criteres['type'] = [$criteres['type']];
+            $filterByType = false;
+        }
 		$data = $this->invitationRepository->findBy($criteres);
 
 		if(isset($criteres['type']) && $filterByType == true)
