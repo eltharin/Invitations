@@ -75,16 +75,16 @@ class ResetPasswordType extends AbstractType
 ```
 
 now we will create an "Invitation":
-Class must extends from AbstractInvitation and should be tagged with app.invitation
+Class must extends from AbstractInvitation, that tag it automaticly with app.invitation
 
 ```php
-#[Autoconfigure(tags: ['app.invitation'])]
+
 class ResetPassword extends AbstractInvitation
 {
 	public function setMailContent(TemplatedEmail $email, InvitationEntityManager $invitationEntityManagerManager): void
 	{
-		$email->setSubject('Reset password')
-			->setTemplatedBody('mail/invitations/resetpassword.html.twig');
+		$email->subject('Reset password')
+			->htmlTemplate('mail/invitations/resetpassword.html.twig');
 	}
 
 	public function resolve(InvitationEntityManager $invitationEntityManagerManager): bool
