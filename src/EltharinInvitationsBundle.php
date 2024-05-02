@@ -72,9 +72,7 @@ class EltharinInvitationsBundle extends AbstractBundle
 				service('eltharin_invitations_locator'),
 				service(InvitationRepository::class),
 				service('Symfony\Component\Mailer\MailerInterface'),
-				service('Symfony\Component\Mailer\Transport\TransportInterface'),
 				service('Symfony\Component\DependencyInjection\ParameterBag\ContainerBagInterface'),
-				service(SendMailService::class),
 			])
 		;
 
