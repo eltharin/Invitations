@@ -2,7 +2,6 @@
 
 namespace Eltharin\InvitationsBundle\Service;
 
-use Eltharin\CommonAssetsBundle\Service\Token;
 use Eltharin\InvitationsBundle\Entity\Invitation;
 use Eltharin\InvitationsBundle\Repository\InvitationRepository;
 use phpDocumentor\Reflection\DocBlock\Tags\Deprecated;
@@ -135,7 +134,7 @@ class InvitationManager
 		}
 
 		$invitation->setCreatedAt(new \DateTimeImmutable());
-		$invitation->setToken(Token::generate());
+		$invitation->setToken(vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex(random_bytes(16)), 4)));
 
 		if(!$classInvit->canCreate($invitation))
 		{
