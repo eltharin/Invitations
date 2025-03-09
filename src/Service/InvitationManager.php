@@ -34,35 +34,51 @@ class InvitationManager
 
 	}
 
-	public function findBy($criteres, $filterByType=true)
+	public function findBy($criteres, $filterByType=true, $indexByItemId = false)
 	{
         if(isset($criteres['type']) && !is_array($criteres['type']))
         {
             $criteres['type'] = [$criteres['type']];
             $filterByType = false;
         }
-		$data = $this->invitationRepository->findBy($criteres);
 
-		if(isset($criteres['type']) && $filterByType == true)
-		{
-			$ret = [];
-			foreach($criteres['type'] as $type)
-			{
-				$ret[$type] = [];
-			}
+        $data = $this->invitationRepository->findBy($criteres);
+        $ret = [];
 
-			foreach($data as $row)
-			{
-				$ret[$row->getType()][] = $this->invitationEntityManager->setInvitation($row);
-			}
-			$data = $ret;
-		}
-		else
-		{
-			$data = array_map(function ($invit) {return $this->invitationEntityManager->setInvitation($invit);}, $data);
-		}
+        if(isset($criteres['type']) && $filterByType == true)
+        {
+            foreach($criteres['type'] as $type)
+            {
+                $ret[$type] = [];
+            }
+        }
 
-		return $data;
+        foreach($data as $row)
+        {
+            $pointer = &$ret;
+
+            if($filterByType)
+            {
+                if(!array_key_exists($row->getType(), $pointer))
+                {
+                    $pointer[$row->getType()] = [];
+                }
+                $pointer = &$pointer[$row->getType()];
+            }
+
+            if($indexByItemId)
+            {
+                if(!array_key_exists($row->getItemId(), $pointer))
+                {
+                    $pointer[$row->getItemId()] = [];
+                }
+                $pointer = &$pointer[$row->getItemId()];
+            }
+
+            $pointer[] = $this->invitationEntityManager->setInvitation($row);
+        }
+
+		return $ret;
 	}
 
 	public function getInvit($invitationId, array $params = []) : ?InvitationEntityManager

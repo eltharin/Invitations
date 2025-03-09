@@ -95,8 +95,8 @@ class InvitationEntityManager
 			if($classInvit->resolve($this) && $deleteAfterSuccess)
 			{
 				$this->delete();
-				return true;
 			}
+            return true;
 		}
 
 		return false;
